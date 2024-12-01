@@ -1,35 +1,55 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect, useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Header from "./components/Header";
+import Sidebar from "./components/Sidebar";
+import Add from "./pages/Add";
+import List from "./pages/List";
+import Orders from "./pages/Orders";
+import Login from "./components/Login";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+export const backendUrl = import.meta.env.VITE_BACKEND_URL;
+export const currency = "₹";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [token, setToken] = useState(localStorage.getItem("token") || null);
+
+  // Ensure the token is updated in localStorage
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem("token", token); // Save token if available
+    } else {
+      localStorage.removeItem("token"); // Clear token if user logs out
+    }
+  }, [token]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="bg-gray-50 min-h-screen">
+      <ToastContainer />
+      {/* Show Login if token is not present, otherwise show the main app */}
+      {!token ? (
+        <Login setToken={setToken} />
+      ) : (
+        <>
+          <Header setToken={setToken} /> {/* Pass the correct setToken prop */}
+          <hr />
+          <div className="flex w-full">
+            <Sidebar />
+            <div className="w-[70%] mx-auto ml-[max(5vw,25px)]  text-gray-600 text-base">
+              <Routes>
+                <Route path="/" element={<Navigate to="/add" />} />
+                <Route path="/add" element={<Add token={token} />} />
+                <Route path="/list" element={<List token={token} />} />
+                <Route path="/orders" element={<Orders token={token} />} />
+                <Route path="*" element={<Navigate to="/add" />} />
+              </Routes>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
